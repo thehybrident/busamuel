@@ -1,0 +1,32 @@
+{
+  "profile": {
+    "name": "Your Name",
+    "role": "Your Role / Title",
+    "avatar": "",
+    "bioQuote": "A short, bold line about what you believe in.",
+    "bioParagraphs": [
+      "Write a paragraph introducing yourself here.",
+      "Add another paragraph about your background, approach, or interests."
+    ],
+    "socials": {
+      "instagram": "",
+      "linkedin": "",
+      "behance": ""
+    }
+  },
+  "hero": {
+    "title": "Your Headline Here.",
+    "subtitle": "A short subheading describing what you do."
+  },
+  "logos": [],
+  "footer": {
+    "location": "Your City, Country",
+    "phone": "",
+    "email": "your@email.com",
+    "copyright": "© 2026 Your Name. All rights reserved."
+  },
+  "enquiryProcess": "Describe your process here.",
+  "socialBrands": [],
+  "identityBrands": [],
+  "editorialBrands": []
+}

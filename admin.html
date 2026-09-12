@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="shortcut icon" href="favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root{
+    --paper:#FFFFFF; --card:#FAFAFA; --text:#4B4A47; --muted:#9B9994; --line:#EAEAE7; --dark:#1A1A1A;
+  }
+  body.dark-mode{
+    --paper:#161513; --card:#201F1D; --text:#EDEBE6; --muted:#9B9994; --line:#3A3835; --dark:#EDEBE6;
+  }
+  body.dark-mode .btn-primary{color:#161513;}
+  body.dark-mode input, body.dark-mode textarea, body.dark-mode select{background:#26241F; color:var(--text);}
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--text); font-family:'Manrope',sans-serif; font-size:15px; line-height:1.6;}
+  .shell{max-width:760px; margin:0 auto; padding:40px 24px 100px;}
+  .top-row{display:flex; justify-content:space-between; align-items:flex-start;}
+  h1{font-size:22px; font-weight:700; margin:0 0 6px;}
+  h2.section-title{font-size:16px; font-weight:700; margin:36px 0 4px;}
+  .sub{color:var(--muted); font-size:13.5px; margin:0 0 32px;}
+  .warning{
+    border:1px dashed var(--line); border-radius:12px; padding:14px 16px;
+    font-size:13px; color:var(--muted); margin-bottom:32px;
+  }
+  fieldset{border:1px solid var(--line); border-radius:14px; padding:20px; margin:0 0 24px;}
+  legend{font-size:13px; font-weight:700; padding:0 8px;}
+  label{display:block; font-size:13px; font-weight:600; margin:14px 0 6px;}
+  label:first-of-type{margin-top:0;}
+  input[type=text], input[type=password], input[type=email], select, textarea{
+    width:100%; background:#FBFBFA; border:1px solid var(--line); border-radius:8px;
+    padding:10px 12px; font-family:inherit; font-size:14px; color:var(--text);
+  }
+  input[type=file]{width:100%; font-size:13px; margin-top:2px;}
+  textarea{resize:vertical;}
+  .row{display:flex; gap:12px;}
+  .row > div{flex:1;}
+  .checkbox-row{display:flex; align-items:center; gap:8px; margin-top:14px;}
+  .checkbox-row input{width:auto;}
+  .checkbox-row label{margin:0; font-weight:400;}
+  button{
+    font-family:inherit; cursor:pointer; border:none; border-radius:999px;
+    padding:11px 22px; font-size:14px; font-weight:600;
+  }
+  .btn-primary{background:var(--dark); color:var(--paper);}
+  .btn-primary:disabled{opacity:0.5; cursor:not-allowed;}
+  .btn-secondary{background:none; border:1px solid var(--line); color:var(--text);}
+  .btn-danger{background:none; border:1px solid #E9C7C7; color:#B23A3A;}
+  .btn-toggle{background:none; border:1px solid var(--line); color:var(--text); border-radius:999px; padding:8px 14px; font-size:13px;}
+  #gate{display:flex; flex-direction:column; gap:14px; max-width:340px; margin:80px auto;}
+  #panel{display:none;}
+  .status{font-size:13px; margin-top:14px; padding:10px 14px; border-radius:8px; display:none;}
+  .status.show{display:block;}
+  .status.ok{background:#EAF3DE; color:#27500A;}
+  .status.err{background:#FCEBEB; color:#791F1F;}
+  body.dark-mode .status.ok{background:#233A16; color:#B7E39A;}
+  body.dark-mode .status.err{background:#3A1E1E; color:#F0AFAF;}
+  .file-item{border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:10px;}
+  .file-item .remove{background:none; border:none; color:var(--muted); font-size:12px; cursor:pointer; padding:0; margin-top:6px;}
+  .logo-list{display:flex; flex-wrap:wrap; gap:12px; margin:10px 0;}
+  .logo-item{border:1px solid var(--line); border-radius:8px; padding:8px; display:flex; flex-direction:column; align-items:center; gap:6px; width:110px;}
+  .logo-item img{max-width:90px; max-height:36px; object-fit:contain;}
+  .logo-item span{font-size:11px; color:var(--muted);}
+  .logo-item button{background:none; border:none; color:#B23A3A; font-size:11px; cursor:pointer; padding:0;}
+  a{color:var(--muted);}
+  .password-wrap{position:relative;}
+  .password-wrap input{padding-right:40px;}
+  .eye-toggle{
+    position:absolute;
+    right:6px;
+    top:50%;
+    transform:translateY(-50%);
+    background:none;
+    border:none;
+    font-size:16px;
+    cursor:pointer;
+    padding:4px 8px;
+    opacity:0.6;
+  }
+  .eye-toggle:hover{opacity:1;}
+  #toast{
+    position:fixed;
+    top:16px;
+    left:50%;
+    transform:translateX(-50%) translateY(-20px);
+    max-width:90vw;
+    padding:12px 20px;
+    border-radius:10px;
+    font-size:14px;
+    font-weight:600;
+    z-index:1000;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.25s ease, transform 0.25s ease;
+    box-shadow:0 8px 24px rgba(0,0,0,0.15);
+  }
+  #toast.show{opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto;}
+  #toast.ok{background:#EAF3DE; color:#27500A;}
+  #toast.err{background:#FCEBEB; color:#791F1F;}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<div class="shell">
+
+  <div id="gate">
+    <h1>Admin</h1>
+    <p class="sub">This screen is a light deterrent only — the real protection is your GitHub token, which never leaves your browser.</p>
+    <div class="password-wrap">
+      <input type="password" id="gatePassword" placeholder="Passcode">
+      <button type="button" class="eye-toggle" onclick="togglePasswordVisibility('gatePassword', this)">👁</button>
+    </div>
+    <button class="btn-primary" onclick="checkGate()">Enter</button>
+    <div class="status err" id="gateError">Wrong passcode.</div>
+  </div>
+
+  <div id="panel">
+    <div class="top-row">
+      <div>
+        <h1>Manage Your Site</h1>
+        <p class="sub">Changes push straight to GitHub. The live site updates within about a minute.</p>
+      </div>
+      <button class="btn-toggle" onclick="toggleDarkMode()" id="darkToggleBtn">🌙 Dark</button>
+    </div>
+
+    <div class="warning">
+      Videos larger than ~20MB won't upload here — GitHub's API has a size limit. For those, add them manually via GitHub Desktop instead.
+    </div>
+
+    <fieldset>
+      <legend>Connection</legend>
+      <label>GitHub personal access token (needs "repo" scope)</label>
+      <div class="password-wrap">
+        <input type="password" id="ghToken" placeholder="ghp_...">
+        <button type="button" class="eye-toggle" onclick="togglePasswordVisibility('ghToken', this)">👁</button>
+      </div>
+      <p style="font-size:12px; color:var(--muted); margin:6px 0 0;">"Bad credentials" usually means the token was copied with a missing character, has expired, or (for fine-grained tokens) wasn't given "Contents: Read and write" access to this repo. Classic tokens with the "repo" checkbox are the most reliable.</p>
+      <div class="checkbox-row">
+        <input type="checkbox" id="rememberToken">
+        <label for="rememberToken">Remember on this device</label>
+      </div>
+      <div class="row">
+        <div>
+          <label>Repo owner</label>
+          <input type="text" id="ghOwner" placeholder="your-github-username">
+        </div>
+        <div>
+          <label>Repo name</label>
+          <input type="text" id="ghRepo" placeholder="your-repo-name">
+        </div>
+      </div>
+      <label>Branch</label>
+      <input type="text" id="ghBranch" value="main">
+      <button class="btn-secondary" style="margin-top:14px;" onclick="loadData()">Load current content</button>
+      <div class="status" id="loadStatus"></div>
+    </fieldset>
+
+    <!-- PROFILE -->
+    <h2 class="section-title">Profile</h2>
+    <fieldset>
+      <label>Name</label>
+      <input type="text" id="profileName">
+      <label>Role / title</label>
+      <input type="text" id="profileRole">
+      <label>Bold intro line</label>
+      <textarea id="profileBioQuote" rows="2"></textarea>
+      <label>Bio paragraphs (separate paragraphs with a blank line)</label>
+      <textarea id="profileBioParagraphs" rows="8"></textarea>
+      <label>Profile photo (auto-converts to grayscale on the site)</label>
+      <input type="file" id="avatarFile" accept="image/*">
+      <label>Rotating badge / logo mark (optional — square image works best; overrides the default "SA." badge)</label>
+      <input type="file" id="badgeFile" accept="image/*">
+      <div class="row" style="margin-top:14px;">
+        <div>
+          <label>Instagram URL</label>
+          <input type="text" id="socialInstagram" placeholder="https://instagram.com/...">
+        </div>
+        <div>
+          <label>LinkedIn URL</label>
+          <input type="text" id="socialLinkedin" placeholder="https://linkedin.com/in/...">
+        </div>
+      </div>
+      <label>Behance URL</label>
+      <input type="text" id="socialBehance" placeholder="https://behance.net/...">
+      <button class="btn-primary" style="margin-top:16px;" onclick="saveProfile()">Save profile</button>
+      <div class="status" id="profileStatus"></div>
+    </fieldset>
+
+    <!-- HERO -->
+    <h2 class="section-title">Homepage Headline</h2>
+    <fieldset>
+      <label>Headline</label>
+      <input type="text" id="heroTitle">
+      <label>Subheading</label>
+      <textarea id="heroSubtitle" rows="3"></textarea>
+      <div class="row" style="margin-top:14px;">
+        <div>
+          <label>Font</label>
+          <select id="heroFont">
+            <option value="'Playfair Display', Georgia, serif">Playfair Display (serif)</option>
+            <option value="'Manrope', sans-serif">Manrope (sans)</option>
+            <option value="Georgia, serif">Georgia (classic serif)</option>
+            <option value="'Courier New', monospace">Courier (monospace)</option>
+          </select>
+        </div>
+        <div>
+          <label>Size (px, desktop)</label>
+          <input type="text" id="heroSize" placeholder="e.g. 54">
+        </div>
+      </div>
+      <label>Color</label>
+      <input type="text" id="heroColor" placeholder="#4B4A47 or leave blank for default">
+      <button class="btn-primary" style="margin-top:16px;" onclick="saveHero()">Save headline</button>
+      <div class="status" id="heroStatus"></div>
+    </fieldset>
+
+    <!-- LOGOS -->
+    <h2 class="section-title">Client Logos (scrolling strip)</h2>
+    <fieldset>
+      <div class="logo-list" id="logoList"></div>
+      <label>Add logo image(s)</label>
+      <input type="file" id="logoFiles" accept="image/*" multiple>
+      <button class="btn-primary" style="margin-top:16px;" onclick="saveLogos()">Save logos</button>
+      <div class="status" id="logoStatus"></div>
+    </fieldset>
+
+    <!-- FOOTER / CONTACT -->
+    <h2 class="section-title">Contact & Footer</h2>
+    <fieldset>
+      <label>Location</label>
+      <input type="text" id="footerLocation">
+      <label>Phone (used for WhatsApp link too — include country code)</label>
+      <input type="text" id="footerPhone">
+      <label>Email</label>
+      <input type="email" id="footerEmail">
+      <label>Copyright line</label>
+      <input type="text" id="footerCopyright">
+      <button class="btn-primary" style="margin-top:16px;" onclick="saveFooter()">Save contact info</button>
+      <div class="status" id="footerStatus"></div>
+    </fieldset>
+
+    <!-- ENQUIRY PROCESS -->
+    <h2 class="section-title">Work Enquiry Page</h2>
+    <fieldset>
+      <label>"My process" text</label>
+      <textarea id="enquiryProcessText" rows="4"></textarea>
+      <button class="btn-primary" style="margin-top:16px;" onclick="saveEnquiryProcess()">Save process text</button>
+      <div class="status" id="enquiryStatus"></div>
+    </fieldset>
+
+    <!-- FAVICON -->
+    <h2 class="section-title">Favicon (browser tab icon)</h2>
+    <fieldset>
+      <label>Upload a square image (at least 180×180px works best)</label>
+      <input type="file" id="faviconFile" accept="image/*">
+      <button class="btn-primary" style="margin-top:16px;" onclick="saveFavicon()">Update favicon</button>
+      <div class="status" id="faviconStatus"></div>
+    </fieldset>
+
+    <!-- BRANDS / WORK -->
+    <h2 class="section-title">Recent Work</h2>
+    <div id="workBoxes"></div>
+
+    <button class="btn-secondary" onclick="logout()">Log out</button>
+    <div class="status" id="publishStatus"></div>
+  </div>
+
+</div>
+
+<script>
+  const GATE_PASSCODE = "changeme"; // ⚠️ change this before you go live!
+
+  function togglePasswordVisibility(fieldId, btn) {
+    const field = document.getElementById(fieldId);
+    const isHidden = field.type === 'password';
+    field.type = isHidden ? 'text' : 'password';
+    btn.textContent = isHidden ? '🙈' : '👁';
+  }
+
+  function checkGate() {
+    const val = document.getElementById('gatePassword').value;
+    if (val === GATE_PASSCODE) {
+      document.getElementById('gate').style.display = 'none';
+      document.getElementById('panel').style.display = 'block';
+      loadSavedToken();
+      loadDarkModePref();
+      renderWorkBoxes();
+      loadData();
+    } else {
+      document.getElementById('gateError').classList.add('show');
+    }
+  }
+
+  function loadSavedToken() {
+    const saved = localStorage.getItem('gh_token');
+    if (saved) {
+      document.getElementById('ghToken').value = saved;
+      document.getElementById('rememberToken').checked = true;
+    }
+  }
+  function logout() {
+    document.getElementById('panel').style.display = 'none';
+    document.getElementById('gate').style.display = 'flex';
+    document.getElementById('gatePassword').value = '';
+  }
+
+  function toggleDarkMode() {
+    const isDark = document.body.classList.toggle('dark-mode');
+    localStorage.setItem('admin_dark_mode', isDark ? '1' : '0');
+    document.getElementById('darkToggleBtn').textContent = isDark ? '☀️ Light' : '🌙 Dark';
+  }
+  function loadDarkModePref() {
+    if (localStorage.getItem('admin_dark_mode') === '1') {
+      document.body.classList.add('dark-mode');
+      document.getElementById('darkToggleBtn').textContent = '☀️ Light';
+    }
+  }
+
+  function ghConfig() {
+    const remember = document.getElementById('rememberToken').checked;
+    const token = document.getElementById('ghToken').value.trim();
+    if (remember) localStorage.setItem('gh_token', token);
+    else localStorage.removeItem('gh_token');
+    return {
+      token,
+      owner: document.getElementById('ghOwner').value.trim(),
+      repo: document.getElementById('ghRepo').value.trim(),
+      branch: document.getElementById('ghBranch').value.trim() || 'main',
+    };
+  }
+
+  function authHeader(token) {
+    return token.startsWith('github_pat_') ? `Bearer ${token}` : `token ${token}`;
+  }
+
+  async function ghGetFile(path) {
+    const cfg = ghConfig();
+    const res = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}?ref=${cfg.branch}`, {
+      headers: { Authorization: authHeader(cfg.token), Accept: 'application/vnd.github+json' }
+    });
+    if (!res.ok) return null;
+    return res.json();
+  }
+
+  async function ghPutFile(path, base64Content, message, sha) {
+    const cfg = ghConfig();
+    const body = { message, content: base64Content, branch: cfg.branch };
+    if (sha) body.sha = sha;
+    const res = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: authHeader(cfg.token),
+        Accept: 'application/vnd.github+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `GitHub API error (${res.status})`);
+    }
+    return res.json();
+  }
+
+  async function ghDeleteFile(path, message, sha) {
+    const cfg = ghConfig();
+    const res = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: authHeader(cfg.token),
+        Accept: 'application/vnd.github+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message, sha, branch: cfg.branch }),
+    });
+    return res.ok;
+  }
+
+  let siteData = {
+    profile: { name: '', role: '', avatar: '', bioQuote: '', bioParagraphs: [], socials: {} },
+    hero: { title: '', subtitle: '' },
+    logos: [],
+    footer: { location: '', phone: '', email: '', copyright: '' },
+    enquiryProcess: '',
+    socialBrands: [], identityBrands: [], editorialBrands: []
+  };
+  let dataSha = null;
+
+  async function loadData() {
+    const token = document.getElementById('ghToken').value.trim();
+    if (!token) {
+      showStatus('loadStatus', 'Paste your GitHub token above first.', false);
+      return;
+    }
+    try {
+      const file = await ghGetFile('data.json');
+      if (file) {
+        dataSha = file.sha;
+        siteData = JSON.parse(decodeURIComponent(escape(atob(file.content))));
+        siteData.profile = siteData.profile || { socials: {} };
+        siteData.hero = siteData.hero || {};
+        siteData.logos = siteData.logos || [];
+        siteData.footer = siteData.footer || {};
+        showStatus('loadStatus', 'Connected — content loaded below.', true);
+        populateFormsFromData();
+      } else {
+        showStatus('loadStatus', 'Could not find data.json — check repo owner/name/branch.', false);
+      }
+    } catch (e) {
+      showStatus('loadStatus', 'Could not connect — check your token.', false);
+    }
+    refreshAllBrandDropdowns();
+  }
+
+  function populateFormsFromData() {
+    const p = siteData.profile || {};
+    document.getElementById('profileName').value = p.name || '';
+    document.getElementById('profileRole').value = p.role || '';
+    document.getElementById('profileBioQuote').value = p.bioQuote || '';
+    document.getElementById('profileBioParagraphs').value = (p.bioParagraphs || []).join('\n\n');
+    const s = p.socials || {};
+    document.getElementById('socialInstagram').value = s.instagram || '';
+    document.getElementById('socialLinkedin').value = s.linkedin || '';
+    document.getElementById('socialBehance').value = s.behance || '';
+
+    const h = siteData.hero || {};
+    document.getElementById('heroTitle').value = h.title || '';
+    document.getElementById('heroSubtitle').value = h.subtitle || '';
+    document.getElementById('heroFont').value = h.fontFamily || "'Playfair Display', Georgia, serif";
+    document.getElementById('heroSize').value = h.fontSize || '';
+    document.getElementById('heroColor').value = h.color || '';
+
+    const f = siteData.footer || {};
+    document.getElementById('footerLocation').value = f.location || '';
+    document.getElementById('footerPhone').value = f.phone || '';
+    document.getElementById('footerEmail').value = f.email || '';
+    document.getElementById('footerCopyright').value = f.copyright || '';
+
+    document.getElementById('enquiryProcessText').value = siteData.enquiryProcess || '';
+
+    renderLogoList();
+  }
+
+  function renderLogoList() {
+    const wrap = document.getElementById('logoList');
+    wrap.innerHTML = '';
+    (siteData.logos || []).forEach((src, i) => {
+      if (!src) return;
+      const item = document.createElement('div');
+      item.className = 'logo-item';
+      item.innerHTML = `<img src="${src}"><span>Logo ${i + 1}</span><button onclick="removeLogo(${i})">Remove</button>`;
+      wrap.appendChild(item);
+    });
+  }
+  function removeLogo(i) {
+    siteData.logos.splice(i, 1);
+    renderLogoList();
+  }
+
+  async function pushDataJson(message) {
+    if (dataSha === null) {
+      const existing = await ghGetFile('data.json');
+      if (existing) dataSha = existing.sha;
+    }
+    const updatedJson = JSON.stringify(siteData, null, 2);
+    const base64Json = btoa(unescape(encodeURIComponent(updatedJson)));
+    const result = await ghPutFile('data.json', base64Json, message, dataSha);
+    dataSha = result.content.sha;
+  }
+
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+  function showStatus(id, msg, ok) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.className = `status show ${ok ? 'ok' : 'err'}`;
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = `${ok ? 'ok' : 'err'} show`;
+    clearTimeout(showStatus._t);
+    showStatus._t = setTimeout(() => toast.classList.remove('show'), 4500);
+  }
+  function slugify(name) {
+    return name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  }
+
+  // ---------- PROFILE ----------
+  async function saveProfile() {
+    try {
+      let avatarPath = siteData.profile.avatar || '';
+      const file = document.getElementById('avatarFile').files[0];
+      if (file) {
+        const base64 = await fileToBase64(file);
+        avatarPath = `images/placeholder/avatar-${Date.now()}-${file.name}`;
+        await ghPutFile(avatarPath, base64, 'Update profile photo');
+      }
+      let badgePath = siteData.profile.badge || '';
+      const badgeFile = document.getElementById('badgeFile').files[0];
+      if (badgeFile) {
+        const base64 = await fileToBase64(badgeFile);
+        badgePath = `images/placeholder/badge-${Date.now()}-${badgeFile.name}`;
+        await ghPutFile(badgePath, base64, 'Update rotating badge');
+      }
+      siteData.profile = {
+        name: document.getElementById('profileName').value,
+        role: document.getElementById('profileRole').value,
+        avatar: avatarPath,
+        badge: badgePath,
+        bioQuote: document.getElementById('profileBioQuote').value,
+        bioParagraphs: document.getElementById('profileBioParagraphs').value.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean),
+        socials: {
+          instagram: document.getElementById('socialInstagram').value,
+          linkedin: document.getElementById('socialLinkedin').value,
+          behance: document.getElementById('socialBehance').value,
+        }
+      };
+      await pushDataJson('Update profile');
+      showStatus('profileStatus', 'Profile saved.', true);
+    } catch (e) {
+      showStatus('profileStatus', e.message || 'Something went wrong.', false);
+    }
+  }
+
+  // ---------- HERO ----------
+  async function saveHero() {
+    try {
+      siteData.hero = {
+        title: document.getElementById('heroTitle').value,
+        subtitle: document.getElementById('heroSubtitle').value,
+        fontFamily: document.getElementById('heroFont').value,
+        fontSize: document.getElementById('heroSize').value.trim(),
+        color: document.getElementById('heroColor').value.trim(),
+      };
+      await pushDataJson('Update homepage headline');
+      showStatus('heroStatus', 'Headline saved.', true);
+    } catch (e) {
+      showStatus('heroStatus', e.message || 'Something went wrong.', false);
+    }
+  }
+
+  // ---------- LOGOS ----------
+  async function saveLogos() {
+    try {
+      const files = Array.from(document.getElementById('logoFiles').files);
+      for (const file of files) {
+        const base64 = await fileToBase64(file);
+        const path = `images/placeholder/logo-${Date.now()}-${file.name}`;
+        await ghPutFile(path, base64, `Add logo ${file.name}`);
+        siteData.logos.push(path);
+      }
+      await pushDataJson('Update client logos');
+      document.getElementById('logoFiles').value = '';
+      renderLogoList();
+      showStatus('logoStatus', 'Logos saved.', true);
+    } catch (e) {
+      showStatus('logoStatus', e.message || 'Something went wrong.', false);
+    }
+  }
+
+  // ---------- FOOTER ----------
+  async function saveFooter() {
+    try {
+      siteData.footer = {
+        location: document.getElementById('footerLocation').value,
+        phone: document.getElementById('footerPhone').value,
+        email: document.getElementById('footerEmail').value,
+        copyright: document.getElementById('footerCopyright').value,
+      };
+      await pushDataJson('Update contact info');
+      showStatus('footerStatus', 'Contact info saved.', true);
+    } catch (e) {
+      showStatus('footerStatus', e.message || 'Something went wrong.', false);
+    }
+  }
+
+  // ---------- ENQUIRY PROCESS ----------
+  async function saveEnquiryProcess() {
+    try {
+      siteData.enquiryProcess = document.getElementById('enquiryProcessText').value;
+      await pushDataJson('Update work enquiry process text');
+      showStatus('enquiryStatus', 'Saved.', true);
+    } catch (e) {
+      showStatus('enquiryStatus', e.message || 'Something went wrong.', false);
+    }
+  }
+
+  // ---------- FAVICON ----------
+  function resizeImageToBase64(img, size) {
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, size, size);
+    return canvas.toDataURL('image/png').split(',')[1];
+  }
+  async function saveFavicon() {
+    const file = document.getElementById('faviconFile').files[0];
+    if (!file) {
+      showStatus('faviconStatus', 'Choose an image first.', false);
+      return;
+    }
+    try {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const img = new Image();
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = dataUrl;
+      });
+      const targets = [
+        { path: 'favicon-16.png', size: 16 },
+        { path: 'favicon-32.png', size: 32 },
+        { path: 'apple-touch-icon.png', size: 180 },
+      ];
+      for (const t of targets) {
+        const base64 = resizeImageToBase64(img, t.size);
+        const existing = await ghGetFile(t.path);
+        await ghPutFile(t.path, base64, `Update ${t.path}`, existing ? existing.sha : undefined);
+      }
+      showStatus('faviconStatus', 'Favicon updated (favicon.ico itself is unchanged, but all modern browsers use the PNG icons instead).', true);
+    } catch (e) {
+      showStatus('faviconStatus', e.message || 'Something went wrong.', false);
+    }
+  }
+
+  // ---------- BRANDS ----------
+  const CATS = [
+    { key: 'socialBrands', label: 'Social Media Creatives', accept: 'image/*' },
+    { key: 'identityBrands', label: 'Brand Identity', accept: 'image/*,video/*' },
+    { key: 'editorialBrands', label: 'Editorial', accept: 'image/*,application/pdf' },
+  ];
+  const selectedFilesByCat = { socialBrands: [], identityBrands: [], editorialBrands: [] };
+
+  function categorySlugFor(cat) {
+    return cat === 'socialBrands' ? 'social' : cat === 'identityBrands' ? 'identity' : 'editorial';
+  }
+
+  function renderWorkBoxes() {
+    const container = document.getElementById('workBoxes');
+    container.innerHTML = CATS.map(c => `
+      <fieldset id="fs-${c.key}">
+        <legend>${c.label}</legend>
+
+        <label>Brand / project name</label>
+        <select id="brand-${c.key}" onchange="onBrandChange('${c.key}')">
+          <option value="__new__">+ Add a new brand</option>
+        </select>
+
+        <div id="newNameWrap-${c.key}" style="display:none;">
+          <label>New brand name</label>
+          <input type="text" id="newName-${c.key}" placeholder="e.g. Brandqor">
+        </div>
+
+        <div id="renameWrap-${c.key}" style="margin-top:10px; display:none;">
+          <label>Rename this brand</label>
+          <div class="row">
+            <input type="text" id="renameInput-${c.key}" placeholder="New name">
+            <button class="btn-secondary" style="flex:0 0 auto;" onclick="renameBrand('${c.key}')">Rename</button>
+          </div>
+          <button class="btn-danger" style="margin-top:10px;" onclick="deleteBrand('${c.key}')">Delete this brand</button>
+        </div>
+
+        <div id="existingFiles-${c.key}" style="margin-top:10px;"></div>
+
+        <label>Header (a short title shown above the description)</label>
+        <input type="text" id="header-${c.key}" placeholder="e.g. About this project">
+        <label>Description</label>
+        <textarea id="desc-${c.key}" rows="3" placeholder="Add project description here."></textarea>
+
+        <label style="margin-top:14px;">Add files${c.key === 'editorialBrands' ? ' (PDFs auto-split into pages)' : c.key === 'identityBrands' ? ' (images or videos)' : ''}</label>
+        <input type="file" id="files-${c.key}" multiple accept="${c.accept}" onchange="onFilesSelected('${c.key}')">
+        <div id="fileList-${c.key}"></div>
+
+        <button class="btn-primary" id="publishBtn-${c.key}" style="margin-top:14px;" onclick="publish('${c.key}')">Publish to ${c.label}</button>
+      </fieldset>
+    `).join('');
+  }
+
+  function refreshBrandDropdown(cat) {
+    const list = siteData[cat] || [];
+    const select = document.getElementById(`brand-${cat}`);
+    if (!select) return;
+    select.innerHTML = `<option value="__new__">+ Add a new brand</option>` +
+      list.map((b, i) => `<option value="${i}">${b.name}</option>`).join('');
+    onBrandChange(cat);
+  }
+  function refreshAllBrandDropdowns() {
+    CATS.forEach(c => refreshBrandDropdown(c.key));
+  }
+
+  function onBrandChange(cat) {
+    const val = document.getElementById(`brand-${cat}`).value;
+    const isNew = val === '__new__';
+    document.getElementById(`newNameWrap-${cat}`).style.display = isNew ? 'block' : 'none';
+    document.getElementById(`renameWrap-${cat}`).style.display = isNew ? 'none' : 'block';
+
+    if (isNew) {
+      document.getElementById(`newName-${cat}`).value = '';
+      document.getElementById(`desc-${cat}`).value = '';
+      document.getElementById(`header-${cat}`).value = '';
+      document.getElementById(`existingFiles-${cat}`).innerHTML = '';
+      return;
+    }
+    const brand = siteData[cat] && siteData[cat][val];
+    if (!brand) return;
+    document.getElementById(`renameInput-${cat}`).value = brand.name;
+    document.getElementById(`desc-${cat}`).value = brand.description || '';
+    document.getElementById(`header-${cat}`).value = brand.header || '';
+    renderExistingFiles(cat);
+  }
+
+  function getBrandMediaArray(cat, brand) {
+    if (cat === 'socialBrands') return brand.images;
+    if (cat === 'identityBrands') return brand.files;
+    return brand.pages;
+  }
+
+  function renderExistingFiles(cat) {
+    const val = document.getElementById(`brand-${cat}`).value;
+    const wrap = document.getElementById(`existingFiles-${cat}`);
+    if (val === '__new__') { wrap.innerHTML = ''; return; }
+    const brand = siteData[cat] && siteData[cat][val];
+    if (!brand) { wrap.innerHTML = ''; return; }
+    const arr = getBrandMediaArray(cat, brand) || [];
+    if (!arr.length) {
+      wrap.innerHTML = '<p style="font-size:12px; color:var(--muted); margin:6px 0 0;">No files uploaded yet.</p>';
+      return;
+    }
+    wrap.innerHTML = '<label>Already uploaded — delete any mistakes here</label>' +
+      arr.map((item, i) => {
+        const isVideo = item && typeof item === 'object' && item.type === 'video';
+        const src = isVideo ? item.src : item;
+        const label = src ? src.split('/').pop() : '(empty placeholder)';
+        return `<div class="file-item">${label}${isVideo ? ' (video)' : ''}
+          <br><button class="remove" onclick="removeExistingFile('${cat}', ${i})">Delete</button></div>`;
+      }).join('');
+  }
+
+  async function removeExistingFile(cat, i) {
+    const val = document.getElementById(`brand-${cat}`).value;
+    if (val === '__new__') return;
+    const brand = siteData[cat][val];
+    const arr = getBrandMediaArray(cat, brand);
+    const removed = arr[i];
+    arr.splice(i, 1);
+    if (cat === 'identityBrands' && brand.cover && removed === brand.cover) {
+      const nextImg = arr.find(x => typeof x === 'string' && x);
+      brand.cover = nextImg || '';
+    }
+    try {
+      await pushDataJson(`Remove a file from ${brand.name}`);
+      renderExistingFiles(cat);
+      showStatus('publishStatus', 'File removed from the site.', true);
+    } catch (e) {
+      showStatus('publishStatus', e.message || 'Something went wrong.', false);
+    }
+  }
+
+  async function renameBrand(cat) {
+    const idx = document.getElementById(`brand-${cat}`).value;
+    const newName = document.getElementById(`renameInput-${cat}`).value.trim();
+    if (idx === '__new__' || !siteData[cat] || !siteData[cat][idx] || !newName) return;
+    try {
+      siteData[cat][idx].name = newName;
+      await pushDataJson(`Rename brand to ${newName}`);
+      refreshBrandDropdown(cat);
+      showStatus('publishStatus', `Renamed to "${newName}".`, true);
+    } catch (e) {
+      showStatus('publishStatus', e.message || 'Something went wrong.', false);
+    }
+  }
+
+  async function deleteBrand(cat) {
+    const idx = document.getElementById(`brand-${cat}`).value;
+    const brand = idx !== '__new__' && siteData[cat] && siteData[cat][idx];
+    if (!brand) return;
+    if (!confirm(`Delete "${brand.name}"? This can't be undone.`)) return;
+    try {
+      siteData[cat].splice(idx, 1);
+      await pushDataJson(`Delete brand ${brand.name}`);
+      refreshBrandDropdown(cat);
+      showStatus('publishStatus', `Deleted "${brand.name}".`, true);
+    } catch (e) {
+      showStatus('publishStatus', e.message || 'Something went wrong.', false);
+    }
+  }
+
+  async function onFilesSelected(cat) {
+    const input = document.getElementById(`files-${cat}`);
+    const rawFiles = Array.from(input.files);
+    selectedFilesByCat[cat] = [];
+    renderFileList(cat);
+    for (const f of rawFiles) {
+      if (f.type === 'application/pdf') {
+        showStatus('publishStatus', `Converting ${f.name} to page images…`, true);
+        try {
+          const pages = await pdfToImages(f);
+          pages.forEach((dataUrl, i) => {
+            selectedFilesByCat[cat].push({
+              dataUrl,
+              filename: `${f.name.replace(/\.pdf$/i, '')}-page${i + 1}.png`,
+              isVideo: false,
+            });
+          });
+        } catch (e) {
+          showStatus('publishStatus', `Could not read ${f.name} as a PDF.`, false);
+        }
+      } else {
+        selectedFilesByCat[cat].push({ file: f, isVideo: f.type.startsWith('video/') });
+      }
+    }
+    document.getElementById('publishStatus').classList.remove('show');
+    renderFileList(cat);
+  }
+  async function pdfToImages(file) {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const images = [];
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const viewport = page.getViewport({ scale: 1.5 });
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+      images.push(canvas.toDataURL('image/png'));
+    }
+    return images;
+  }
+  function renderFileList(cat) {
+    const wrap = document.getElementById(`fileList-${cat}`);
+    wrap.innerHTML = '';
+    selectedFilesByCat[cat].forEach((item, i) => {
+      const name = item.file ? item.file.name : item.filename;
+      const div = document.createElement('div');
+      div.className = 'file-item';
+      div.innerHTML = `${name} ${item.isVideo ? '(video)' : ''}
+        <br><button class="remove" onclick="removeFile('${cat}', ${i})">Remove</button>`;
+      wrap.appendChild(div);
+    });
+  }
+  function removeFile(cat, i) {
+    selectedFilesByCat[cat].splice(i, 1);
+    renderFileList(cat);
+  }
+
+  async function publish(cat) {
+    const btn = document.getElementById(`publishBtn-${cat}`);
+    btn.disabled = true;
+    btn.textContent = 'Publishing…';
+
+    try {
+      const selectedVal = document.getElementById(`brand-${cat}`).value;
+      const isNew = selectedVal === '__new__';
+      const brandName = isNew
+        ? document.getElementById(`newName-${cat}`).value.trim()
+        : (siteData[cat][selectedVal] || {}).name;
+
+      if (!brandName) throw new Error('Enter a name for the new brand, or pick an existing one.');
+      const slug = slugify(brandName);
+      const categorySlug = categorySlugFor(cat);
+      const files = selectedFilesByCat[cat];
+
+      const uploadedPaths = [];
+      let fileIndex = 0;
+      for (const item of files) {
+        const base64 = item.dataUrl ? item.dataUrl.split(',')[1] : await fileToBase64(item.file);
+        const filename = item.dataUrl ? item.filename : item.file.name;
+        const path = `images/${categorySlug}/${slug}/${Date.now()}-${fileIndex}-${filename}`;
+        await ghPutFile(path, base64, `Upload ${filename} for ${brandName}`);
+        uploadedPaths.push({ path, isVideo: item.isVideo });
+        fileIndex++;
+      }
+
+      const headerVal = document.getElementById(`header-${cat}`).value || '';
+      const descVal = document.getElementById(`desc-${cat}`).value || '';
+
+      let brand;
+      if (isNew) {
+        if (cat === 'socialBrands') brand = { name: brandName, header: headerVal, description: descVal, images: [] };
+        if (cat === 'identityBrands') brand = { name: brandName, cover: '', header: headerVal, description: descVal || 'Add project description here.', files: [] };
+        if (cat === 'editorialBrands') brand = { name: brandName, header: headerVal, description: descVal, pages: [] };
+        siteData[cat].push(brand);
+      } else {
+        brand = siteData[cat][selectedVal];
+        brand.header = headerVal || brand.header || '';
+        brand.description = descVal || brand.description || '';
+      }
+
+      uploadedPaths.forEach(({ path, isVideo }) => {
+        if (cat === 'socialBrands') {
+          brand.images.push(path);
+        } else if (cat === 'identityBrands') {
+          const entry = isVideo ? { type: 'video', src: path } : path;
+          brand.files.push(entry);
+          if (!brand.cover) brand.cover = isVideo ? '' : path;
+        } else if (cat === 'editorialBrands') {
+          brand.pages.push(path);
+        }
+      });
+
+      await pushDataJson(`Update ${brandName}`);
+
+      showStatus('publishStatus', `Published ${uploadedPaths.length} file(s) for "${brandName}". Site updates in about a minute.`, true);
+      selectedFilesByCat[cat] = [];
+      document.getElementById(`files-${cat}`).value = '';
+      renderFileList(cat);
+      refreshBrandDropdown(cat);
+    } catch (e) {
+      showStatus('publishStatus', e.message || 'Something went wrong.', false);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = `Publish to ${CATS.find(c => c.key === cat).label}`;
+    }
+  }
+</script>
+
+</body>
+</html>

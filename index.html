@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Name — Portfolio</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="shortcut icon" href="favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="shell">
+
+  <div class="topbar">
+    <div class="email-group">
+      <span id="topEmail">your@email.com</span>
+      <button class="copy-btn" onclick="copyEmail(this)">Copy</button>
+    </div>
+    <div class="topbar-right">
+      <a class="enquiry-link" href="enquiry.html">Work Enquiry</a>
+      <button class="theme-toggle" id="themeToggle" onclick="toggleSiteTheme()" aria-label="Toggle dark mode">🌙</button>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <aside class="profile" id="profileContainer"></aside>
+
+    <div class="content">
+
+      <div class="section hero-section" id="heroContainer"></div>
+
+      <div class="logos-row">
+        <div class="logos-track" id="logosTrack"></div>
+      </div>
+
+      <div class="section work-section" id="work">
+        <h2>Recent Works</h2>
+
+        <h3 class="work-subheading">Social Media Creatives</h3>
+        <div id="socialBrands"></div>
+
+        <h3 class="work-subheading">Brand Identity</h3>
+        <div id="identityBrands"></div>
+
+        <h3 class="work-subheading">Editorial</h3>
+        <div id="editorialBrands"></div>
+      </div>
+
+      <div class="section contact-section">
+        <h2>Tell me about your next project.</h2>
+        <div class="contact-actions">
+          <a class="cta-btn" id="emailMeBtn" href="#">Email Me</a>
+          <a class="btn-secondary" id="whatsappBtn" href="#" target="_blank" rel="noopener">WhatsApp</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer" id="footerContainer"></div>
+
+</div>
+
+<!-- VERTICAL VIEWER -->
+<div class="viewer" id="viewer">
+  <button class="viewer-close" onclick="closeViewer()">&times;</button>
+  <div class="viewer-inner">
+    <div class="viewer-title" id="viewerTitle"></div>
+    <div class="viewer-stack" id="viewerStack"></div>
+  </div>
+</div>
+
+<!-- FLIPBOOK VIEWER (Editorial) -->
+<div class="flip-viewer" id="flipbookViewer">
+  <button class="viewer-close" onclick="closeFlipbook()">&times;</button>
+  <div class="viewer-title" id="flipTitle"></div>
+  <div class="flip-caption" id="flipCaption"></div>
+  <div class="flipbook">
+    <div class="book-page-left" id="bookLeft"><div class="flip-media"></div></div>
+    <div class="book-page-right">
+      <div class="flip-layer" id="flipBottom"><div class="flip-media"></div></div>
+      <div class="flip-layer" id="flipTop"><div class="flip-media"></div></div>
+    </div>
+  </div>
+  <div class="flip-controls">
+    <button class="lb-btn" onclick="flipPrev()">&#8592;</button>
+    <span class="flip-counter" id="flipCounter"></span>
+    <button class="lb-btn" onclick="flipNext()">&#8594;</button>
+  </div>
+</div>
+
+<!-- PHOTO LIGHTBOX (profile avatar) -->
+<div class="photo-lightbox" id="photoLightbox" onclick="closePhotoLightbox()">
+  <img id="photoLightboxImg" src="" alt="">
+</div>
+
+<script>
+  /*
+    All project content now lives in data.json, so the admin panel can
+    update it without touching this file. If data.json fails to load
+    (e.g. opened locally without a server), it falls back to a couple
+    of placeholders so the page still renders.
+  */
+  let socialBrands = [];
+  let identityBrands = [];
+  let editorialBrands = [];
+
+  function mediaTag(item, altText) {
+    if (item && typeof item === 'object' && item.type === 'video') {
+      return item.src
+        ? `<video src="${item.src}" controls playsinline></video>`
+        : `<div class="media-placeholder">Add video</div>`;
+    }
+    const src = item;
+    return src
+      ? `<img src="${src}" alt="${altText}">`
+      : `<div class="media-placeholder">Add image</div>`;
+  }
+
+  function renderSocial() {
+    const container = document.getElementById('socialBrands');
+    container.innerHTML = '';
+    socialBrands.forEach((brand, brandIndex) => {
+      const block = document.createElement('div');
+      block.className = 'brand-block';
+      const heading = document.createElement('h4');
+      heading.textContent = brand.name;
+      block.appendChild(heading);
+      if (brand.header) {
+        const h = document.createElement('p');
+        h.className = 'brand-header-text';
+        h.textContent = brand.header;
+        block.appendChild(h);
+      }
+      if (brand.description) {
+        const d = document.createElement('p');
+        d.className = 'brand-desc-text';
+        d.textContent = brand.description;
+        block.appendChild(d);
+      }
+      const grid = document.createElement('div');
+      grid.className = 'smc-grid';
+      brand.images.forEach((img, imgIndex) => {
+        const thumb = document.createElement('div');
+        thumb.className = 'smc-thumb';
+        thumb.innerHTML = mediaTag(img, brand.name);
+        thumb.onclick = () => openViewer('social', brandIndex, imgIndex);
+        grid.appendChild(thumb);
+      });
+      block.appendChild(grid);
+      container.appendChild(block);
+    });
+  }
+
+  function renderIdentity() {
+    const container = document.getElementById('identityBrands');
+    container.innerHTML = '';
+    identityBrands.forEach((brand, brandIndex) => {
+      const block = document.createElement('div');
+      block.className = 'brand-block';
+      const heading = document.createElement('h4');
+      heading.textContent = brand.name;
+      block.appendChild(heading);
+      const cover = document.createElement('div');
+      cover.className = 'identity-cover';
+      cover.innerHTML = mediaTag(brand.cover, brand.name);
+      cover.onclick = () => openViewer('identity', brandIndex);
+      block.appendChild(cover);
+      container.appendChild(block);
+    });
+  }
+
+  function renderEditorial() {
+    const container = document.getElementById('editorialBrands');
+    container.innerHTML = '';
+    editorialBrands.forEach((brand, brandIndex) => {
+      const block = document.createElement('div');
+      block.className = 'brand-block';
+      const heading = document.createElement('h4');
+      heading.textContent = brand.name;
+      block.appendChild(heading);
+      const cover = document.createElement('div');
+      cover.className = 'identity-cover editorial-cover';
+      cover.innerHTML = mediaTag(brand.pages[0], brand.name);
+      cover.onclick = () => openFlipbook(brandIndex);
+      block.appendChild(cover);
+      container.appendChild(block);
+    });
+  }
+
+  function socialIconSvg(kind) {
+    if (kind === 'instagram') return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="0.6" fill="currentColor" stroke="none"/></svg>`;
+    if (kind === 'linkedin') return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="7.5" y1="10" x2="7.5" y2="17"/><circle cx="7.5" cy="6.8" r="0.9" fill="currentColor" stroke="none"/><path d="M11.5 17v-4.2c0-1.6 1-2.6 2.4-2.6 1.3 0 2.1.9 2.1 2.6V17"/></svg>`;
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7h5.2a2.4 2.4 0 0 1 0 4.8H3z"/><path d="M3 11.8h5.6a2.6 2.6 0 0 1 0 5.2H3z"/><path d="M14 13.2c0-2 1.4-3.4 3.3-3.4 2 0 3.2 1.4 3.2 3.6v.4h-5.3c.1 1.3 1 2.1 2.2 2.1.9 0 1.5-.3 1.9-.9l1.1.9c-.7 1-1.8 1.6-3.1 1.6-2 0-3.3-1.4-3.3-3.6z"/><line x1="15.3" y1="7.8" x2="19.3" y2="7.8"/></svg>`;
+  }
+
+  function renderBadge(profile) {
+    if (!profile || !profile.badge) return; // keep the default SVG badge
+    const badge = document.querySelector('.sa-badge');
+    if (!badge) return;
+    badge.innerHTML = `<img src="${profile.badge}" alt="${profile.name || ''}" class="sa-badge-img">`;
+  }
+
+  function renderProfile(profile) {
+    const el = document.getElementById('profileContainer');
+    const socials = profile.socials || {};
+    const socialLinks = ['instagram', 'linkedin', 'behance']
+      .map(k => `<a href="${socials[k] || '#'}" ${socials[k] ? 'target="_blank" rel="noopener"' : ''} aria-label="${k}">${socialIconSvg(k)}</a>`)
+      .join('');
+    el.innerHTML = `
+      <div class="avatar" onclick="openPhotoLightbox('${profile.avatar || ''}', '${(profile.name || '').replace(/'/g, "\\'")}')"><img src="${profile.avatar || ''}" alt="${profile.name || ''}"></div>
+      <h1>${profile.name || ''}</h1>
+      <p class="role">${profile.role || ''}</p>
+      <p class="bio-quote">${profile.bioQuote || ''}</p>
+      ${(profile.bioParagraphs || []).map(p => `<p class="bio-body">${p}</p>`).join('')}
+      <div class="social-row">${socialLinks}</div>
+    `;
+  }
+
+  function renderHero(hero) {
+    const styleParts = [];
+    if (hero.fontFamily) styleParts.push(`font-family:${hero.fontFamily}`);
+    if (hero.fontSize) styleParts.push(`font-size:${hero.fontSize}px`);
+    if (hero.color) styleParts.push(`color:${hero.color}`);
+    const styleAttr = styleParts.length ? `style="${styleParts.join(';')}"` : '';
+    document.getElementById('heroContainer').innerHTML = `
+      <h2 class="hero-title" id="heroTitleEl" ${styleAttr}>${hero.title || ''}</h2>
+      <p class="hero-sub">${hero.subtitle || ''}</p>
+      <button class="cta-btn" onclick="document.getElementById('work').scrollIntoView({behavior:'smooth'})">Recent Work →</button>
+    `;
+    typeHeroTitle(document.getElementById('heroTitleEl'));
+    attachMagneticToAll();
+  }
+
+  function renderLogos(logos) {
+    const track = document.getElementById('logosTrack');
+    const list = (logos && logos.length ? logos : ['', '', '', '', '']);
+    const doubled = list.concat(list); // duplicate for seamless marquee loop
+    track.innerHTML = doubled.map(src =>
+      src ? `<img src="${src}" alt="Client logo" class="logo-box logo-img">` : `<div class="logo-box"></div>`
+    ).join('');
+  }
+
+  function renderFooter(footer) {
+    document.getElementById('footerContainer').innerHTML = `<span>${footer.copyright || ''}</span>`;
+    if (footer.email) {
+      document.getElementById('emailMeBtn').href = `mailto:${footer.email}`;
+      document.getElementById('topEmail').textContent = footer.email;
+    }
+    if (footer.phone) {
+      const digits = footer.phone.replace(/[^0-9]/g, '');
+      document.getElementById('whatsappBtn').href = `https://wa.me/${digits}`;
+    }
+  }
+
+  fetch('data.json')
+    .then(res => res.json())
+    .then(data => {
+      if (data.profile) renderProfile(data.profile);
+      renderBadge(data.profile);
+      if (data.hero) renderHero(data.hero);
+      renderLogos((data.logos || []).filter(Boolean));
+      if (data.footer) renderFooter(data.footer);
+
+      socialBrands = data.socialBrands || [];
+      identityBrands = data.identityBrands || [];
+      editorialBrands = data.editorialBrands || [];
+
+      // Strip any empty placeholder slots left over from earlier drafts —
+      // new uploads get appended, so old blanks would otherwise still show.
+      socialBrands.forEach(b => { b.images = (b.images || []).filter(Boolean); });
+      identityBrands.forEach(b => {
+        b.files = (b.files || []).filter(f => f && (typeof f === 'object' ? f.src : f));
+      });
+      editorialBrands.forEach(b => { b.pages = (b.pages || []).filter(Boolean); });
+
+      renderSocial();
+      renderIdentity();
+      renderEditorial();
+      attachTiltToAll();
+      attachMagneticToAll();
+    })
+    .catch(() => {
+      socialBrands = [{ name: "Add a brand in the admin panel", images: ["", "", "", ""] }];
+      identityBrands = [];
+      editorialBrands = [];
+      renderSocial();
+      attachTiltToAll();
+    });
+
+  let currentEditorialBrand = null;
+  let spreadIndex = 0; // interior spreads, counted AFTER the cover
+  let covered = true;  // true = showing only the cover, single page
+
+  function isDesktopSpread() {
+    return window.innerWidth >= 760;
+  }
+
+  function openFlipbook(brandIndex) {
+    currentEditorialBrand = editorialBrands[brandIndex];
+    spreadIndex = 0;
+    covered = true;
+    document.getElementById('flipTitle').textContent = currentEditorialBrand.name;
+    const captionParts = [];
+    if (currentEditorialBrand.header) captionParts.push(`<strong>${currentEditorialBrand.header}</strong>`);
+    if (currentEditorialBrand.description) captionParts.push(currentEditorialBrand.description);
+    document.getElementById('flipCaption').innerHTML = captionParts.join('<br>');
+    document.getElementById('flipbookViewer').classList.add('covered');
+    setupCover();
+    document.getElementById('flipbookViewer').classList.add('active');
+  }
+  function closeFlipbook() {
+    document.getElementById('flipbookViewer').classList.remove('active');
+  }
+
+  function setupCover() {
+    const pages = currentEditorialBrand.pages;
+    const top = document.getElementById('flipTop');
+    const bottom = document.getElementById('flipBottom');
+    top.classList.remove('flip-next-anim', 'flip-prev-anim');
+    top.style.transform = 'rotateY(0deg)';
+    top.querySelector('.flip-media').innerHTML = mediaTag(pages[0], currentEditorialBrand.name);
+    bottom.querySelector('.flip-media').innerHTML = pages[1] !== undefined
+      ? mediaTag(pages[1], currentEditorialBrand.name)
+      : `<div class="media-placeholder">End of pages</div>`;
+    document.getElementById('flipCounter').textContent = `1 / ${pages.length}`;
+  }
+
+  // Once opened: on desktop each step shows a left+right spread; on mobile, one page at a time.
+  function step() { return isDesktopSpread() ? 2 : 1; }
+  function rightIndex() { return isDesktopSpread() ? 2 + spreadIndex * 2 : 1 + spreadIndex; }
+  function leftIndex() { return 1 + spreadIndex * 2; }
+
+  function setupSpread() {
+    const pages = currentEditorialBrand.pages;
+    const top = document.getElementById('flipTop');
+    const bottom = document.getElementById('flipBottom');
+    const left = document.getElementById('bookLeft');
+
+    top.classList.remove('flip-next-anim', 'flip-prev-anim');
+    top.style.transform = 'rotateY(0deg)';
+    top.querySelector('.flip-media').innerHTML = pages[rightIndex()] !== undefined
+      ? mediaTag(pages[rightIndex()], currentEditorialBrand.name)
+      : `<div class="media-placeholder">End of pages</div>`;
+    bottom.querySelector('.flip-media').innerHTML = pages[rightIndex() + step()] !== undefined
+      ? mediaTag(pages[rightIndex() + step()], currentEditorialBrand.name)
+      : `<div class="media-placeholder">End of pages</div>`;
+
+    if (isDesktopSpread()) {
+      left.querySelector('.flip-media').innerHTML = mediaTag(pages[leftIndex()], currentEditorialBrand.name);
+    }
+    updateFlipCounter();
+  }
+  function updateFlipCounter() {
+    const total = currentEditorialBrand.pages.length;
+    const shown = Math.min(rightIndex() + 1, total);
+    document.getElementById('flipCounter').textContent = `${shown} / ${total}`;
+  }
+
+  // Short synthesized "paper flip" sound — no audio file needed.
+  let audioCtx = null;
+  function playFlipSound() {
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      const duration = 0.22;
+      const bufferSize = audioCtx.sampleRate * duration;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+      }
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.value = 1200;
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      noise.connect(filter).connect(gain).connect(audioCtx.destination);
+      noise.start();
+    } catch (e) { /* audio not available — fail silently */ }
+  }
+
+  function runFlipAnimation(top, animClass, onDone) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      onDone();
+      return;
+    }
+    top.classList.remove('flip-next-anim', 'flip-prev-anim');
+    void top.offsetWidth; // restart animation if same class was just used
+    top.classList.add(animClass);
+    top.addEventListener('animationend', function handler() {
+      top.removeEventListener('animationend', handler);
+      top.classList.remove(animClass);
+      onDone();
+    }, { once: true });
+  }
+
+  function flipNext() {
+    const pages = currentEditorialBrand.pages;
+    const top = document.getElementById('flipTop');
+
+    if (covered) {
+      if (pages.length <= 1) return; // nothing behind the cover
+      playFlipSound();
+      covered = false;
+      document.getElementById('flipbookViewer').classList.remove('covered');
+
+      const bottom = document.getElementById('flipBottom');
+      const left = document.getElementById('bookLeft');
+      const rightAfter = isDesktopSpread() ? pages[2] : pages[1];
+      bottom.querySelector('.flip-media').innerHTML = rightAfter !== undefined
+        ? mediaTag(rightAfter, currentEditorialBrand.name)
+        : `<div class="media-placeholder">End of pages</div>`;
+      if (isDesktopSpread()) {
+        left.querySelector('.flip-media').innerHTML = mediaTag(pages[1], currentEditorialBrand.name);
+      }
+      runFlipAnimation(top, 'flip-next-anim', () => {
+        spreadIndex = 0;
+        setupSpread();
+      });
+      return;
+    }
+
+    if (pages[rightIndex() + step()] === undefined && pages[rightIndex()] === undefined) return;
+    playFlipSound();
+    runFlipAnimation(top, 'flip-next-anim', () => {
+      spreadIndex++;
+      setupSpread();
+    });
+  }
+
+  function flipPrev() {
+    if (covered) return; // already at the cover, nothing before it
+    const pages = currentEditorialBrand.pages;
+    const top = document.getElementById('flipTop');
+    const bottom = document.getElementById('flipBottom');
+    const left = document.getElementById('bookLeft');
+
+    if (spreadIndex === 0) {
+      // Close the book back to the cover
+      playFlipSound();
+      bottom.querySelector('.flip-media').innerHTML = mediaTag(pages[rightIndex()], currentEditorialBrand.name);
+      top.style.transform = 'rotateY(-180deg)';
+      top.querySelector('.flip-media').innerHTML = mediaTag(pages[0], currentEditorialBrand.name);
+      runFlipAnimation(top, 'flip-prev-anim', () => {
+        covered = true;
+        document.getElementById('flipbookViewer').classList.add('covered');
+        document.getElementById('flipCounter').textContent = `1 / ${pages.length}`;
+      });
+      return;
+    }
+
+    playFlipSound();
+    bottom.querySelector('.flip-media').innerHTML = mediaTag(pages[rightIndex()], currentEditorialBrand.name);
+    top.style.transform = 'rotateY(-180deg)';
+    top.querySelector('.flip-media').innerHTML = mediaTag(pages[rightIndex() - step()], currentEditorialBrand.name);
+    if (isDesktopSpread()) {
+      left.querySelector('.flip-media').innerHTML = mediaTag(pages[leftIndex() - step()], currentEditorialBrand.name);
+    }
+    runFlipAnimation(top, 'flip-prev-anim', () => {
+      spreadIndex--;
+      updateFlipCounter();
+    });
+  }
+
+  window.addEventListener('resize', () => {
+    if (currentEditorialBrand && document.getElementById('flipbookViewer').classList.contains('active') && !covered) {
+      spreadIndex = 0;
+      setupSpread();
+    }
+  });
+  document.getElementById('flipbookViewer').addEventListener('click', (e) => {
+    if (e.target.id === 'flipbookViewer') closeFlipbook();
+  });
+
+  function openViewer(kind, brandIndex, scrollToIndex) {
+    const viewer = document.getElementById('viewer');
+    const stack = document.getElementById('viewerStack');
+    stack.innerHTML = '';
+
+    if (kind === 'social') {
+      const brand = socialBrands[brandIndex];
+      document.getElementById('viewerTitle').textContent = brand.name;
+      brand.images.forEach((img) => {
+        const item = document.createElement('div');
+        item.className = 'viewer-item';
+        item.innerHTML = mediaTag(img, brand.name);
+        stack.appendChild(item);
+      });
+    } else {
+      const brand = identityBrands[brandIndex];
+      document.getElementById('viewerTitle').textContent = brand.name;
+      brand.files.forEach((file, i) => {
+        const item = document.createElement('div');
+        item.className = 'viewer-item';
+        item.innerHTML = mediaTag(file, brand.name);
+        stack.appendChild(item);
+        if (i === 0) {
+          if (brand.header) {
+            const heading = document.createElement('div');
+            heading.className = 'viewer-desc-heading';
+            heading.textContent = brand.header;
+            stack.appendChild(heading);
+          }
+          const desc = document.createElement('div');
+          desc.className = 'viewer-desc';
+          desc.textContent = brand.description;
+          stack.appendChild(desc);
+        }
+      });
+    }
+
+    viewer.classList.add('active');
+  }
+  function closeViewer() {
+    document.getElementById('viewer').classList.remove('active');
+    document.getElementById('viewerStack').innerHTML = '';
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { closeViewer(); closeFlipbook(); }
+    if (document.getElementById('flipbookViewer').classList.contains('active')) {
+      if (e.key === 'ArrowRight') flipNext();
+      if (e.key === 'ArrowLeft') flipPrev();
+    }
+  });
+  document.getElementById('viewer').addEventListener('click', (e) => {
+    if (e.target.id === 'viewer') closeViewer();
+  });
+
+  function applySiteTheme(theme) {
+    document.body.classList.toggle('dark-mode', theme === 'dark');
+    document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+  }
+  function toggleSiteTheme() {
+    const isDark = document.body.classList.contains('dark-mode');
+    const next = isDark ? 'light' : 'dark';
+    localStorage.setItem('site_theme', next);
+    applySiteTheme(next);
+  }
+  applySiteTheme(localStorage.getItem('site_theme') || 'light');
+
+  function copyEmail(btn) {
+    navigator.clipboard.writeText(document.getElementById('topEmail').textContent).then(() => {
+      const original = btn.textContent;
+      btn.textContent = 'Copied';
+      setTimeout(() => { btn.textContent = original; }, 1500);
+    });
+  }
+
+  function openPhotoLightbox(src, alt) {
+    if (!src) return;
+    document.getElementById('photoLightboxImg').src = src;
+    document.getElementById('photoLightboxImg').alt = alt || '';
+    document.getElementById('photoLightbox').classList.add('active');
+  }
+  function closePhotoLightbox() {
+    document.getElementById('photoLightbox').classList.remove('active');
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closePhotoLightbox();
+  });
+
+  /* ---------- FUN INTERACTIONS ---------- */
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hasFinePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const funEnabled = !prefersReducedMotion && hasFinePointer;
+
+  // 1. Magnetic buttons
+  function makeMagnetic(el) {
+    if (!funEnabled || !el) return;
+    el.addEventListener('mousemove', (e) => {
+      const rect = el.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      el.style.transform = `translate(${x * 0.25}px, ${y * 0.3}px)`;
+    });
+    el.addEventListener('mouseleave', () => { el.style.transform = 'translate(0,0)'; });
+  }
+  function attachMagneticToAll() {
+    document.querySelectorAll('.cta-btn, .btn-secondary').forEach(makeMagnetic);
+  }
+
+  // 3. Typing animation on the hero headline
+  function typeHeroTitle(el) {
+    if (!el) return;
+    const fullText = el.textContent;
+    if (!funEnabled) return; // show full text instantly, skip animation
+    el.textContent = '';
+    const cursor = document.createElement('span');
+    cursor.className = 'typing-cursor';
+    let i = 0;
+    function typeNext() {
+      if (i <= fullText.length) {
+        el.textContent = fullText.slice(0, i);
+        el.appendChild(cursor);
+        i++;
+        setTimeout(typeNext, 35);
+      } else {
+        cursor.remove();
+      }
+    }
+    typeNext();
+  }
+
+  // 4. 3D tilt on hover for work thumbnails
+  function makeTilt(el) {
+    if (!funEnabled) return;
+    el.addEventListener('mousemove', (e) => {
+      const rect = el.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      const img = el.querySelector('img, video');
+      if (img) img.style.transform = `scale(1.04) rotateX(${y * -8}deg) rotateY(${x * 8}deg)`;
+    });
+    el.addEventListener('mouseleave', () => {
+      const img = el.querySelector('img, video');
+      if (img) img.style.transform = '';
+    });
+  }
+  function attachTiltToAll() {
+    document.querySelectorAll('.smc-thumb, .identity-cover').forEach(makeTilt);
+  }
+
+</script>
+
+<div class="sa-badge" onclick="document.getElementById('work').scrollIntoView({behavior:'smooth'})">
+  <svg class="sa-badge-ring" viewBox="0 0 200 200">
+    <defs>
+      <path id="saCirclePath" d="M100,100 m-84,0 a84,84 0 1,1 168,0 a84,84 0 1,1 -168,0"/>
+    </defs>
+    <text font-size="13" letter-spacing="3">
+      <textPath href="#saCirclePath" xlink:href="#saCirclePath">
+        YOUR.NAME.HERE • YOUR.NAME.HERE •
+      </textPath>
+    </text>
+  </svg>
+  <div class="sa-badge-center">YN<span class="sa-badge-dot">.</span></div>
+</div>
+
+</body>
+</html>

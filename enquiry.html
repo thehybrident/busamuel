@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Work Enquiry</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="shortcut icon" href="favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="shell">
+
+  <div class="topbar">
+    <div class="email-group">
+      <span id="topEmail"></span>
+      <button class="copy-btn" onclick="copyEmail(this)">Copy</button>
+    </div>
+    <div class="topbar-right">
+      <a class="enquiry-link" href="index.html">Back to Work</a>
+      <button class="theme-toggle" id="themeToggle" onclick="toggleSiteTheme()" aria-label="Toggle dark mode">🌙</button>
+    </div>
+  </div>
+
+  <div class="enquiry-page-header">
+    <a class="back-link" href="index.html">← Back</a>
+    <h1>Work Enquiry</h1>
+    <p class="process-placeholder" id="processText"></p>
+  </div>
+
+  <div class="enquiry-grid">
+    <form class="enquiry-form" id="enquiryForm" method="POST">
+      <div class="form-row">
+        <input type="text" name="name" placeholder="Name" required>
+        <input type="email" name="email" placeholder="Email" required>
+      </div>
+      <textarea name="message" placeholder="Message" rows="6" required></textarea>
+      <input type="hidden" name="_subject" value="New work enquiry from portfolio site">
+      <input type="hidden" name="_captcha" value="false">
+      <input type="hidden" name="_template" value="table">
+      <button type="submit" class="cta-btn">Send Message</button>
+    </form>
+    <div class="enquiry-details" id="enquiryDetails"></div>
+  </div>
+
+  <div class="footer" id="footerContainer"></div>
+
+</div>
+
+<script>
+  let emailAddress = 'your@email.com';
+
+  function applySiteTheme(theme) {
+    document.body.classList.toggle('dark-mode', theme === 'dark');
+    document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+  }
+  function toggleSiteTheme() {
+    const isDark = document.body.classList.contains('dark-mode');
+    const next = isDark ? 'light' : 'dark';
+    localStorage.setItem('site_theme', next);
+    applySiteTheme(next);
+  }
+  applySiteTheme(localStorage.getItem('site_theme') || 'light');
+
+  function copyEmail(btn) {
+    navigator.clipboard.writeText(emailAddress).then(() => {
+      const original = btn.textContent;
+      btn.textContent = 'Copied';
+      setTimeout(() => { btn.textContent = original; }, 1500);
+    });
+  }
+
+  fetch('data.json')
+    .then(res => res.json())
+    .then(data => {
+      const footer = data.footer || {};
+      emailAddress = footer.email || emailAddress;
+
+      document.getElementById('topEmail').textContent = emailAddress;
+      document.getElementById('processText').textContent = data.enquiryProcess || 'My process — details coming soon.';
+      document.getElementById('enquiryForm').setAttribute('action', `https://formsubmit.co/${emailAddress}`);
+
+      document.getElementById('enquiryDetails').innerHTML = `
+        <div><strong>Location</strong>${footer.location || ''}</div>
+        <div><strong>Phone</strong>${footer.phone || ''}</div>
+        <div><strong>Email</strong>${emailAddress}</div>
+      `;
+      document.getElementById('footerContainer').innerHTML = `<span>${footer.copyright || ''}</span>`;
+    })
+    .catch(() => {
+      document.getElementById('topEmail').textContent = emailAddress;
+      document.getElementById('processText').textContent = 'My process — details coming soon.';
+      document.getElementById('enquiryForm').setAttribute('action', `https://formsubmit.co/${emailAddress}`);
+    });
+</script>
+
+</body>
+</html>
