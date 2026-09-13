@@ -22,7 +22,23 @@
     "fontSize": "",
     "color": "#FEE505"
   },
-  "logos": [],
+  "logos": [
+    "images/placeholder/logo-1789295965740-Logo One-01.png",
+    "images/placeholder/logo-1789295967374-Logo One-02.png",
+    "images/placeholder/logo-1789295968556-Logo One-03.png",
+    "images/placeholder/logo-1789295969784-Logo One-04.png",
+    "images/placeholder/logo-1789295971009-Logo One-05.png",
+    "images/placeholder/logo-1789295972106-Logo One-06.png",
+    "images/placeholder/logo-1789295973148-Logo One-07.png",
+    "images/placeholder/logo-1789295973721-Logo One-01.png",
+    "images/placeholder/logo-1789295974366-Logo One-08.png",
+    "images/placeholder/logo-1789295974922-Logo One-02.png",
+    "images/placeholder/logo-1789295975594-Logo One-09.png",
+    "images/placeholder/logo-1789295977100-Logo One-10.png",
+    "images/placeholder/logo-1789295978357-Logo One-11.png",
+    "images/placeholder/logo-1789295979714-Logo One-12.png",
+    "images/placeholder/logo-1789295980342-Logo One-01.png"
+  ],
   "footer": {
     "location": "Lagos, Nigeria",
     "phone": "",
