@@ -16,8 +16,11 @@
     }
   },
   "hero": {
-    "title": "Your Headline Here.",
-    "subtitle": "A short subheading describing what you do."
+    "title": "I build brands that behave like beliefs.",
+    "subtitle": "Brand, content, strategy, experiences — one point of view.\n",
+    "fontFamily": "'Playfair Display', Georgia, serif",
+    "fontSize": "",
+    "color": ""
   },
   "logos": [],
   "footer": {
